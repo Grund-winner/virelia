@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import ZoomBlocker from "@/components/ZoomBlocker";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -33,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning className="overscroll-none">
       <body className={`${inter.variable} antialiased bg-[#F4F5FA] text-[#1E1B4B] font-sans`} style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>
+        <ZoomBlocker />
         {children}
         <Toaster />
       </body>

@@ -145,19 +145,22 @@
   scrollbar-color: #D1D0E0 transparent;
 }
 
-/* Prevent overscroll bounce on iOS */
+/* Prevent overscroll bounce on iOS + block all zoom */
 html {
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
 }
 
-/* Prevent double-tap zoom and pinch zoom */
+/* Block zoom gestures on body */
 body {
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
 }
 
 /* Prevent iOS auto-zoom on input focus (font-size must be >= 16px) */
