@@ -105,7 +105,8 @@ function getAvatarUrl(avatar: string, name: string) {
 function getPersonalityLabel(p: string) {
   switch (p) {
     case 'ami': return 'Ami';
-    case 'ami_proche': return 'Ami proche';
+    case 'ami_proche': return 'Ami';
+    case 'copain': return 'Copain';
     case 'copine': return 'Copine';
     default: return p;
   }
@@ -283,7 +284,7 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
   // Login screen
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#F4F5FA] flex items-center justify-center px-4">
+      <div className="min-h-dvh bg-[#F4F5FA] flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -351,7 +352,7 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F4F5FA]">
+    <div className="min-h-dvh bg-[#F4F5FA]">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-xl border-b border-[#E5E4F0] sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">

@@ -61,7 +61,7 @@ export default function MessageInput() {
   if (!activeCompanion) return null;
 
   return (
-    <div className="p-3 sm:p-4 bg-white/80 backdrop-blur-xl border-t border-[#E5E4F0]">
+    <div className="p-3 sm:p-4 bg-white/80 backdrop-blur-xl border-t border-[#E5E4F0] safe-bottom">
       <div className="flex items-end gap-2 max-w-4xl mx-auto">
         <div className="flex-1 relative">
           <textarea
@@ -75,7 +75,7 @@ export default function MessageInput() {
             placeholder={`Écrire à ${activeCompanion.name}...`}
             rows={1}
             disabled={isSending}
-            className="w-full px-4 py-3 rounded-2xl border border-[#E5E4F0] bg-[#F4F5FA] text-[#1E1B4B] placeholder-[#9896BF] focus:outline-none focus:ring-2 focus:ring-[#7C5CFC]/30 focus:border-[#7C5CFC] resize-none transition-all disabled:opacity-50 text-sm leading-relaxed"
+            className="w-full px-4 py-3 rounded-2xl border border-[#E5E4F0] bg-[#F4F5FA] text-[#1E1B4B] placeholder-[#9896BF] focus:outline-none focus:ring-2 focus:ring-[#7C5CFC]/30 focus:border-[#7C5CFC] resize-none transition-all disabled:opacity-50 text-base leading-relaxed"
             style={{ maxHeight: '120px' }}
           />
         </div>

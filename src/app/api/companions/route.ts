@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Le nom est requis' }, { status: 400 });
       }
 
-      const validPersonality = ['ami', 'ami_proche', 'copine'].includes(personality) ? personality : 'ami';
+      const validPersonality = ['ami', 'ami_proche', 'copain', 'copine'].includes(personality) ? personality : 'ami';
 
       const companion = await db.companion.create({
         data: {
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       if (formData.has('name')) updateData.name = (formData.get('name') as string)?.trim();
       if (formData.has('personality')) {
         const p = (formData.get('personality') as string)?.trim();
-        updateData.personality = ['ami', 'ami_proche', 'copine'].includes(p || '') ? p : 'ami';
+        updateData.personality = ['ami', 'ami_proche', 'copain', 'copine'].includes(p || '') ? p : 'ami';
       }
       if (formData.has('avatar')) updateData.avatar = formData.get('avatar') as string;
 

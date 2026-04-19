@@ -19,8 +19,8 @@ interface CreateCompanionModalProps {
 
 const personalities = [
   { value: 'ami', label: 'Ami', emoji: '👋', description: 'Un ami chaleureux et compréhensif' },
-  { value: 'ami_proche', label: 'Ami proche', emoji: '🤗', description: 'Un ami intime qui vous connaît bien' },
-  { value: 'copine', label: 'Copine', emoji: '💕', description: 'Une partenaire attentionnée et affectueuse' },
+  { value: 'copain', label: 'Copain', emoji: '😎', description: 'Un copain affectueux et attentionné' },
+  { value: 'copine', label: 'Copine', emoji: '💕', description: 'Une copine attentionnée et affectueuse' },
 ];
 
 export default function CreateCompanionModal({ open, onOpenChange, onCreated }: CreateCompanionModalProps) {

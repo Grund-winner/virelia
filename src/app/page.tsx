@@ -100,7 +100,7 @@ export default function Home() {
   // Loading state while checking session
   if (checking) {
     return (
-      <div className="min-h-screen bg-[#F4F5FA] flex items-center justify-center">
+      <div className="min-h-dvh bg-[#F4F5FA] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div
             className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg animate-pulse"

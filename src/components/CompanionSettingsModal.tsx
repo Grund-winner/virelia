@@ -18,7 +18,7 @@ interface CompanionSettingsModalProps {
 
 const personalities = [
   { value: 'ami', label: 'Ami', emoji: '👋' },
-  { value: 'ami_proche', label: 'Ami proche', emoji: '🤗' },
+  { value: 'copain', label: 'Copain', emoji: '😎' },
   { value: 'copine', label: 'Copine', emoji: '💕' },
 ];
 

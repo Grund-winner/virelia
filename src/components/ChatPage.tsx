@@ -120,7 +120,7 @@ export default function ChatPage({
   }, [setActiveCompanion]);
 
   return (
-    <div className="flex h-screen bg-[#F4F5FA] overflow-hidden">
+    <div className="flex h-dvh bg-[#F4F5FA] overflow-hidden">
       {/* Sidebar */}
       <Sidebar
         onNewCompanion={onNewCompanion}

@@ -58,7 +58,7 @@ export default function AuthPage({ initialTab = 'login', onAuth, onBack }: AuthP
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#F4F5FA] flex items-center justify-center px-4">
+    <div className="min-h-dvh relative overflow-hidden bg-[#F4F5FA] flex items-center justify-center px-4">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div

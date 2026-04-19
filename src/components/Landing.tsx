@@ -28,7 +28,7 @@ const features = [
 
 export default function Landing({ onLogin, onRegister }: LandingProps) {
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#F4F5FA]">
+    <div className="min-h-dvh relative overflow-hidden bg-[#F4F5FA]">
       {/* Background gradient mesh */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
@@ -64,7 +64,7 @@ export default function Landing({ onLogin, onRegister }: LandingProps) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-12">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-dvh px-4 py-12">
         {/* Logo */}
         <motion.div
           initial={{ opacity: 0, scale: 0.5 }}

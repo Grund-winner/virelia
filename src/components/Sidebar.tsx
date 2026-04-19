@@ -16,7 +16,8 @@ interface SidebarProps {
 function getPersonalityLabel(p: string) {
   switch (p) {
     case 'ami': return 'Ami';
-    case 'ami_proche': return 'Ami proche';
+    case 'ami_proche': return 'Ami';
+    case 'copain': return 'Copain';
     case 'copine': return 'Copine';
     default: return p;
   }
@@ -47,7 +48,7 @@ export default function Sidebar({ onNewCompanion, onProfileClick, onSettingsClic
 
       {/* Sidebar */}
       <motion.aside
-        className={`fixed lg:relative top-0 left-0 h-full z-50 lg:z-auto w-80 lg:w-80 flex flex-col bg-white/80 backdrop-blur-xl border-r border-[#E5E4F0] transition-transform lg:translate-x-0 ${
+        className={`fixed lg:relative top-0 left-0 h-full z-50 lg:z-auto w-[85vw] max-w-80 lg:w-80 flex flex-col bg-white/80 backdrop-blur-xl border-r border-[#E5E4F0] transition-transform lg:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -156,8 +157,10 @@ export default function Sidebar({ onNewCompanion, onProfileClick, onSettingsClic
                         className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
                         style={{
                           background: companion.personality === 'copine' ? 'rgba(124, 92, 252, 0.15)' :
+                            companion.personality === 'copain' ? 'rgba(59, 130, 246, 0.15)' :
                             companion.personality === 'ami_proche' ? 'rgba(34, 211, 238, 0.15)' : '#F4F5FA',
                           color: companion.personality === 'copine' ? '#7C5CFC' :
+                            companion.personality === 'copain' ? '#3B82F6' :
                             companion.personality === 'ami_proche' ? '#0891B2' : '#4B4880',
                         }}
                       >
