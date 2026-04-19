@@ -113,11 +113,11 @@ export async function POST(request: NextRequest) {
       data: { companionId: companion_id, userId, content: message.trim(), sender: 'user' },
     });
 
-    // Get conversation history
+    // Get conversation history (50 messages for better memory context)
     const history = await db.message.findMany({
       where: { companionId: companion_id, userId },
       orderBy: { createdAt: 'desc' },
-      take: 20,
+      take: 50,
       select: { content: true, sender: true },
     });
 
