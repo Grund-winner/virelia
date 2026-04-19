@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaLibSql } from '@prisma/adapter-libsql';
-import { createClient } from '@libsql/client';
+import { PrismaLibSQL } from '@prisma/adapter-libsql';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -13,11 +12,11 @@ function createPrismaClient() {
 
   if (tursoUrl && tursoToken) {
     // Turso/libSQL for production (Vercel)
-    const libsql = createClient({
+    // PrismaLibSQL accepts the libsql config directly (not a pre-created client)
+    const adapter = new PrismaLibSQL({
       url: tursoUrl,
       authToken: tursoToken,
     });
-    const adapter = new PrismaLibSql(libsql);
     return new PrismaClient({ adapter });
   }
 
