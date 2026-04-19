@@ -3,7 +3,7 @@
 import { useAppStore, type Companion } from '@/store';
 import { formatTimeShort } from '@/lib/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Settings, LogOut, X, Sparkles, Shield } from 'lucide-react';
+import { Plus, Settings, LogOut, X, Sparkles } from 'lucide-react';
 
 interface SidebarProps {
   onNewCompanion: () => void;
@@ -11,7 +11,6 @@ interface SidebarProps {
   onSettingsClick: () => void;
   onCompanionSettings: (companion: Companion) => void;
   onLogout: () => void;
-  onAdminClick: () => void;
 }
 
 function getPersonalityLabel(p: string) {
@@ -28,7 +27,7 @@ function getAvatarUrl(avatar: string, name: string) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=7C5CFC&color=fff&size=128&bold=true`;
 }
 
-export default function Sidebar({ onNewCompanion, onProfileClick, onSettingsClick, onCompanionSettings, onLogout, onAdminClick }: SidebarProps) {
+export default function Sidebar({ onNewCompanion, onProfileClick, onSettingsClick, onCompanionSettings, onLogout }: SidebarProps) {
   const { user, companions, activeCompanion, setActiveCompanion, isSidebarOpen, setSidebarOpen } = useAppStore();
 
   return (
@@ -183,13 +182,7 @@ export default function Sidebar({ onNewCompanion, onProfileClick, onSettingsClic
               <Settings className="w-4 h-4" />
               <span className="text-sm font-medium">Paramètres</span>
             </button>
-            <button
-              onClick={onAdminClick}
-              className="p-2.5 rounded-xl text-[#9896BF] hover:text-[#7C5CFC] hover:bg-[#F4F5FA] transition-colors"
-              title="Administration"
-            >
-              <Shield className="w-4 h-4" />
-            </button>
+
             <button
               onClick={onLogout}
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors"

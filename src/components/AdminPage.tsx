@@ -96,6 +96,7 @@ function getPersonalityLabel(p: string) {
 }
 
 export default function AdminPage({ onBack }: { onBack: () => void }) {
+  // onBack navigates to home page - admin is a separate route at /admin
   const [isAdmin, setIsAdmin] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');

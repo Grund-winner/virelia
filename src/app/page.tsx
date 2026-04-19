@@ -5,12 +5,11 @@ import { useAppStore, type Companion } from '@/store';
 import Landing from '@/components/Landing';
 import AuthPage from '@/components/AuthPage';
 import ChatPage from '@/components/ChatPage';
-import AdminPage from '@/components/AdminPage';
 import CreateCompanionModal from '@/components/CreateCompanionModal';
 import ProfileModal from '@/components/ProfileModal';
 import CompanionSettingsModal from '@/components/CompanionSettingsModal';
 
-type View = 'landing' | 'auth' | 'chat' | 'admin';
+type View = 'landing' | 'auth' | 'chat';
 
 export default function Home() {
   const { user, setUser, setActiveCompanion, setCompanions } = useAppStore();
@@ -139,12 +138,7 @@ export default function Home() {
           onSettingsClick={() => setProfileModalOpen(true)}
           onCompanionSettings={handleCompanionSettings}
           onLogout={handleLogout}
-          onAdminClick={() => setView('admin')}
         />
-      )}
-
-      {view === 'admin' && (
-        <AdminPage onBack={() => setView(user ? 'chat' : 'landing')} />
       )}
 
       {/* Modals */}

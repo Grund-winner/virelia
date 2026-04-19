@@ -13,7 +13,6 @@ interface ChatPageProps {
   onSettingsClick: () => void;
   onCompanionSettings: (companion: Companion) => void;
   onLogout: () => void;
-  onAdminClick: () => void;
 }
 
 function getAvatarUrl(avatar: string, name: string) {
@@ -27,7 +26,6 @@ export default function ChatPage({
   onSettingsClick,
   onCompanionSettings,
   onLogout,
-  onAdminClick,
 }: ChatPageProps) {
   const {
     activeCompanion,
@@ -130,7 +128,6 @@ export default function ChatPage({
         onSettingsClick={onSettingsClick}
         onCompanionSettings={onCompanionSettings}
         onLogout={onLogout}
-        onAdminClick={onAdminClick}
       />
 
       {/* Main chat area */}
