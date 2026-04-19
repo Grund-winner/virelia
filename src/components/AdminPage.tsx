@@ -61,6 +61,22 @@ interface AdminConversation {
 interface ProviderStatus {
   name: string;
   configured: boolean;
+  keyCount: number;
+  details: string;
+}
+
+interface KeyUsageEntry {
+  provider: string;
+  keyIndex: number;
+  keySuffix: string;
+  requests: number;
+  lastUsed: string | null;
+}
+
+interface UsageStats {
+  dailyRequests: number;
+  dailyDate: string;
+  keys: KeyUsageEntry[];
 }
 
 type AdminTab = 'dashboard' | 'users' | 'keys' | 'diagnostic';
@@ -111,6 +127,7 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
   const [selectedCompanion, setSelectedCompanion] = useState<string | null>(null);
   const [conversation, setConversation] = useState<AdminConversation | null>(null);
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
+  const [usage, setUsage] = useState<UsageStats | null>(null);
   const [diagnosticLoading, setDiagnosticLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -194,7 +211,8 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
       const res = await fetch('/api/admin/diagnostic');
       const data = await res.json();
       if (data.success) {
-        setProviders(data.providers);
+        setProviders(data.providers || []);
+        setUsage(data.usage || null);
       }
     } catch {
       // ignore
@@ -258,6 +276,7 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
     if (!isAdmin) return;
     if (tab === 'dashboard') loadStats();
     if (tab === 'users') loadUsers();
+    if (tab === 'keys') loadDiagnostic();
     if (tab === 'diagnostic') loadDiagnostic();
   }, [tab, isAdmin, loadStats, loadUsers, loadDiagnostic]);
 
@@ -578,44 +597,45 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-[#E5E4F0] p-6">
+            {/* Provider status cards */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-[#E5E4F0] p-6 mb-6">
               <h3 className="font-semibold text-[#1E1B4B] mb-4 flex items-center gap-2">
                 <Key className="w-5 h-5" />
                 Statut des clés API
               </h3>
-              <div className="space-y-3">
-                {['Groq', 'Gemini', 'OpenRouter'].map((name) => {
-                  const provider = providers.find((p) => p.name === name);
-                  const configured = provider?.configured ?? false;
-                  return (
+              {diagnosticLoading && providers.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-[#7C5CFC]" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {providers.map((provider) => (
                     <div
-                      key={name}
+                      key={provider.name}
                       className="flex items-center justify-between p-4 rounded-xl border border-[#E5E4F0] hover:bg-[#F4F5FA]/50 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                            configured ? 'bg-green-50' : 'bg-red-50'
+                            provider.configured ? 'bg-green-50' : 'bg-red-50'
                           }`}
                         >
-                          <Key className={`w-5 h-5 ${configured ? 'text-green-500' : 'text-red-400'}`} />
+                          <Key className={`w-5 h-5 ${provider.configured ? 'text-green-500' : 'text-red-400'}`} />
                         </div>
                         <div>
-                          <p className="font-medium text-sm text-[#1E1B4B]">{name}</p>
-                          <p className="text-xs text-[#9896BF]">
-                            {configured ? 'Clé configurée' : 'Clé non configurée'}
-                          </p>
+                          <p className="font-medium text-sm text-[#1E1B4B]">{provider.name}</p>
+                          <p className="text-xs text-[#9896BF]">{provider.details}</p>
                         </div>
                       </div>
-                      {configured ? (
+                      {provider.configured ? (
                         <CheckCircle className="w-5 h-5 text-green-500" />
                       ) : (
                         <XCircle className="w-5 h-5 text-red-400" />
                       )}
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )}
               <button
                 onClick={() => loadDiagnostic()}
                 disabled={diagnosticLoading}
@@ -624,6 +644,98 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                 {diagnosticLoading ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
                 Rafraîchir
               </button>
+            </div>
+
+            {/* Key usage stats */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-[#E5E4F0] p-6">
+              <h3 className="font-semibold text-[#1E1B4B] mb-4 flex items-center gap-2">
+                <Activity className="w-5 h-5" />
+                Utilisation des clés
+                {usage && (
+                  <span className="text-xs font-normal text-[#9896BF] ml-2">
+                    {usage.dailyRequests} requête(s) le {usage.dailyDate}
+                  </span>
+                )}
+              </h3>
+              {!usage || usage.keys.length === 0 ? (
+                <div className="text-center py-8 text-[#9896BF]">
+                  <Activity className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">Aucune donnée d'utilisation disponible</p>
+                  <p className="text-xs mt-1">Les statistiques apparaîtront après les premières requêtes IA</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Daily summary */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                    <div className="bg-[#7C5CFC]/5 rounded-xl p-4 text-center">
+                      <p className="text-2xl font-bold text-[#7C5CFC]">{usage.dailyRequests}</p>
+                      <p className="text-xs text-[#9896BF]">Requêtes aujourd'hui</p>
+                    </div>
+                    <div className="bg-[#22D3EE]/5 rounded-xl p-4 text-center">
+                      <p className="text-2xl font-bold text-[#0891B2]">{usage.keys.length}</p>
+                      <p className="text-xs text-[#9896BF]">Clés utilisées</p>
+                    </div>
+                    <div className="bg-[#F59E0B]/5 rounded-xl p-4 text-center">
+                      <p className="text-2xl font-bold text-[#F59E0B]">{usage.keys.length > 0 ? usage.keys[0].requests : 0}</p>
+                      <p className="text-xs text-[#9896BF]">Clé la plus sollicitée</p>
+                    </div>
+                  </div>
+
+                  {/* Per-key breakdown */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[#E5E4F0]">
+                          <th className="text-left py-2 px-3 text-[#9896BF] font-medium">Fournisseur</th>
+                          <th className="text-left py-2 px-3 text-[#9896BF] font-medium">Clé</th>
+                          <th className="text-right py-2 px-3 text-[#9896BF] font-medium">Requêtes</th>
+                          <th className="text-right py-2 px-3 text-[#9896BF] font-medium">Dernière utilisation</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {usage.keys.map((key, i) => {
+                          const maxRequests = usage.keys[0]?.requests || 1;
+                          const usagePercent = Math.round((key.requests / maxRequests) * 100);
+                          return (
+                            <tr key={i} className="border-b border-[#E5E4F0]/50 hover:bg-[#F4F5FA]/50">
+                              <td className="py-2.5 px-3">
+                                <span className={`text-xs px-2 py-1 rounded-lg font-medium ${
+                                  key.provider === 'groq' ? 'bg-[#7C5CFC]/10 text-[#7C5CFC]' :
+                                  key.provider === 'gemini' ? 'bg-[#22D3EE]/10 text-[#0891B2]' :
+                                  'bg-[#F59E0B]/10 text-[#F59E0B]'
+                                }`}>
+                                  {key.provider === 'groq' ? 'Groq' : key.provider === 'gemini' ? 'Gemini' : 'OpenRouter'}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 font-mono text-xs text-[#4B4880]">
+                                Clé #{key.keyIndex + 1} ({key.keySuffix})
+                              </td>
+                              <td className="py-2.5 px-3 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <div className="w-16 bg-[#E5E4F0] rounded-full h-1.5">
+                                    <div
+                                      className={`h-1.5 rounded-full ${
+                                        usagePercent > 80 ? 'bg-red-500' :
+                                        usagePercent > 50 ? 'bg-[#F59E0B]' :
+                                        'bg-[#7C5CFC]'
+                                      }`}
+                                      style={{ width: `${usagePercent}%` }}
+                                    />
+                                  </div>
+                                  <span className="font-medium text-[#1E1B4B]">{key.requests}</span>
+                                </div>
+                              </td>
+                              <td className="py-2.5 px-3 text-right text-xs text-[#9896BF]">
+                                {key.lastUsed ? formatTimeAdmin(key.lastUsed) : '-'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -646,6 +758,38 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                 </div>
               ) : providers.length > 0 ? (
                 <div className="space-y-4">
+                  {/* Overall status */}
+                  <div className={`p-4 rounded-xl border ${
+                    providers.every(p => p.configured)
+                      ? 'border-green-200 bg-green-50/50'
+                      : providers.some(p => p.configured)
+                        ? 'border-yellow-200 bg-yellow-50/50'
+                        : 'border-red-200 bg-red-50/50'
+                  }`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      {providers.every(p => p.configured) ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : providers.some(p => p.configured) ? (
+                        <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500" />
+                      )}
+                      <p className="font-medium text-sm text-[#1E1B4B]">
+                        {providers.every(p => p.configured)
+                          ? 'Tous les fournisseurs sont configurés'
+                          : providers.some(p => p.configured)
+                            ? 'Certains fournisseurs ne sont pas configurés'
+                            : 'Aucun fournisseur configuré'
+                        }
+                      </p>
+                    </div>
+                    <p className="text-xs text-[#9896BF]">
+                      {providers.filter(p => p.configured).length} / {providers.length} fournisseur(s) actif(s)
+                      {usage && ` · ${usage.dailyRequests} requête(s) aujourd'hui`}
+                    </p>
+                  </div>
+
+                  {/* Per-provider details */}
                   {providers.map((provider) => (
                     <div
                       key={provider.name}
@@ -664,9 +808,7 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                           )}
                           <div>
                             <p className="font-medium text-sm text-[#1E1B4B]">{provider.name}</p>
-                            <p className="text-xs text-[#9896BF]">
-                              {provider.configured ? 'Connecté et prêt' : 'Non configuré'}
-                            </p>
+                            <p className="text-xs text-[#9896BF]">{provider.details}</p>
                           </div>
                         </div>
                         <span
@@ -681,6 +823,31 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
                       </div>
                     </div>
                   ))}
+
+                  {/* Key usage summary in diagnostic */}
+                  {usage && usage.keys.length > 0 && (
+                    <div className="mt-4 p-4 rounded-xl border border-[#E5E4F0] bg-[#F4F5FA]/50">
+                      <p className="font-medium text-sm text-[#1E1B4B] mb-3">Activité du jour ({usage.dailyDate})</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-[#7C5CFC]">{usage.dailyRequests}</p>
+                          <p className="text-xs text-[#9896BF]">Requêtes</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-[#0891B2]">{usage.keys.filter(k => k.provider === 'groq').reduce((a, b) => a + b.requests, 0)}</p>
+                          <p className="text-xs text-[#9896BF]">Via Groq</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-[#F59E0B]">{usage.keys.filter(k => k.provider === 'gemini').reduce((a, b) => a + b.requests, 0)}</p>
+                          <p className="text-xs text-[#9896BF]">Via Gemini</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-[#10B981]">{usage.keys.filter(k => k.provider === 'openrouter').reduce((a, b) => a + b.requests, 0)}</p>
+                          <p className="text-xs text-[#9896BF]">Via OpenRouter</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12 text-[#9896BF]">

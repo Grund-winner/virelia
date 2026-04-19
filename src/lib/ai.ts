@@ -11,6 +11,58 @@ interface AIProviderStatus {
   has_any_provider: boolean;
 }
 
+// Request tracking per key
+interface KeyUsage {
+  keyIndex: number;
+  provider: string;
+  requests: number;
+  lastUsed: Date | null;
+}
+
+// In-memory tracking (resets on server restart)
+const keyUsageMap = new Map<string, KeyUsage>();
+let dailyRequests = 0;
+let dailyDate = new Date().toISOString().split('T')[0];
+
+function trackKeyUsage(provider: string, keyIndex: number, key: string) {
+  const today = new Date().toISOString().split('T')[0];
+  if (today !== dailyDate) {
+    dailyRequests = 0;
+    dailyDate = today;
+  }
+  dailyRequests++;
+
+  const mapKey = `${provider}_${keyIndex}_${key.slice(-6)}`;
+  const existing = keyUsageMap.get(mapKey);
+  if (existing) {
+    existing.requests++;
+    existing.lastUsed = new Date();
+  } else {
+    keyUsageMap.set(mapKey, {
+      keyIndex,
+      provider,
+      requests: 1,
+      lastUsed: new Date(),
+    });
+  }
+}
+
+export function getKeyUsageStats() {
+  const today = new Date().toISOString().split('T')[0];
+  const usageArray = Array.from(keyUsageMap.values()).map(u => ({
+    provider: u.provider,
+    keyIndex: u.keyIndex,
+    keySuffix: '***' + (keyUsageMap.keys().find(k => keyUsageMap.get(k) === u)?.split('_').pop() || ''),
+    requests: u.requests,
+    lastUsed: u.lastUsed?.toISOString() || null,
+  }));
+  return {
+    dailyRequests: dailyDate === today ? dailyRequests : 0,
+    dailyDate: today,
+    keys: usageArray.sort((a, b) => b.requests - a.requests),
+  };
+}
+
 function getGroqKeys(): string[] {
   const keys: string[] = [];
   for (let i = 1; i <= 10; i++) {
@@ -79,7 +131,8 @@ function buildSystemPrompt(personality: string, companionName: string, userName:
   return prompt;
 }
 
-async function callOpenAI(url: string, model: string, messages: Array<{role: string; content: string}>, maxTokens: number, apiKey: string): Promise<string | null> {
+async function callOpenAI(url: string, model: string, messages: Array<{role: string; content: string}>, maxTokens: number, apiKey: string, provider: string = 'groq', keyIndex: number = 0): Promise<string | null> {
+  trackKeyUsage(provider, keyIndex, apiKey);
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -97,7 +150,8 @@ async function callOpenAI(url: string, model: string, messages: Array<{role: str
   } catch { return null; }
 }
 
-async function callGemini(model: string, messages: Array<{role: string; content: string}>, maxTokens: number, apiKey: string): Promise<string | null> {
+async function callGemini(model: string, messages: Array<{role: string; content: string}>, maxTokens: number, apiKey: string, keyIndex: number = 0): Promise<string | null> {
+  trackKeyUsage('gemini', keyIndex, apiKey);
   try {
     const geminiMessages: Array<{role: string; parts: Array<{text: string}>}> = [];
     let systemText = '';
@@ -160,13 +214,13 @@ export async function generateAIResponse(
   const promises: Promise<string | null>[] = [];
 
   if (groqKeys.length > 0) {
-    promises.push(callOpenAI('https://api.groq.com/openai/v1/chat/completions', 'llama-3.1-8b-instant', messages, 80, groqKeys[0]));
+    promises.push(callOpenAI('https://api.groq.com/openai/v1/chat/completions', 'llama-3.1-8b-instant', messages, 80, groqKeys[0], 'groq', 0));
   }
   if (geminiKeys.length > 0) {
-    promises.push(callGemini('gemini-2.0-flash-lite', messages, 80, geminiKeys[0]));
+    promises.push(callGemini('gemini-2.0-flash-lite', messages, 80, geminiKeys[0], 0));
   }
   if (openrouterKey) {
-    promises.push(callOpenAI('https://openrouter.ai/api/v1/chat/completions', 'meta-llama/llama-3.1-8b-instruct', messages, 80, openrouterKey));
+    promises.push(callOpenAI('https://openrouter.ai/api/v1/chat/completions', 'meta-llama/llama-3.1-8b-instruct', messages, 80, openrouterKey, 'openrouter', 0));
   }
 
   if (promises.length === 0) {
@@ -185,11 +239,11 @@ export async function generateAIResponse(
 
   // Fallback: try remaining keys sequentially
   for (let i = 1; i < groqKeys.length; i++) {
-    const result = await callOpenAI('https://api.groq.com/openai/v1/chat/completions', 'llama-3.1-8b-instant', messages, 80, groqKeys[i]);
+    const result = await callOpenAI('https://api.groq.com/openai/v1/chat/completions', 'llama-3.1-8b-instant', messages, 80, groqKeys[i], 'groq', i);
     if (result) return result;
   }
   for (let i = 1; i < geminiKeys.length; i++) {
-    const result = await callGemini('gemini-2.0-flash-lite', messages, 80, geminiKeys[i]);
+    const result = await callGemini('gemini-2.0-flash-lite', messages, 80, geminiKeys[i], i);
     if (result) return result;
   }
 
@@ -218,13 +272,13 @@ export async function generateProactiveMessage(
 
   const promises: Promise<string | null>[] = [];
   if (groqKeys.length > 0) {
-    promises.push(callOpenAI('https://api.groq.com/openai/v1/chat/completions', 'llama-3.1-8b-instant', messages, 40, groqKeys[0]));
+    promises.push(callOpenAI('https://api.groq.com/openai/v1/chat/completions', 'llama-3.1-8b-instant', messages, 40, groqKeys[0], 'groq', 0));
   }
   if (geminiKeys.length > 0) {
-    promises.push(callGemini('gemini-2.0-flash-lite', messages, 40, geminiKeys[0]));
+    promises.push(callGemini('gemini-2.0-flash-lite', messages, 40, geminiKeys[0], 0));
   }
   if (openrouterKey) {
-    promises.push(callOpenAI('https://openrouter.ai/api/v1/chat/completions', 'meta-llama/llama-3.1-8b-instruct', messages, 40, openrouterKey));
+    promises.push(callOpenAI('https://openrouter.ai/api/v1/chat/completions', 'meta-llama/llama-3.1-8b-instruct', messages, 40, openrouterKey, 'openrouter', 0));
   }
 
   if (promises.length > 0) {
