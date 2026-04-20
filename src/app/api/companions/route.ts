@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSessionUserId } from '@/lib/auth';
+import { generateGreeting } from '@/lib/ai';
 
 export async function GET(request: NextRequest) {
   try {
@@ -88,12 +89,36 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Send first message from companion
+      // Get user info for personalized greeting
+      const user = await db.user.findUnique({ where: { id: userId } });
+      const userName = user?.displayName || user?.username || '';
+
+      // Generate personalized first greeting from companion
+      let greeting: string;
+      try {
+        greeting = await generateGreeting(validPersonality, name, userName);
+      } catch {
+        // Fallback to simple greeting if AI fails
+        if (validPersonality === 'copine') {
+          greeting = `Salut, chui ${name}! Enchantee 😊`;
+        } else if (validPersonality === 'copain') {
+          greeting = `Yo, chui ${name}! Ravi de te rencontrer 😎`;
+        } else {
+          greeting = `Hey, chui ${name}! Ravi de faire ta connaissance 👋`;
+        }
+      }
+
+      // Save greeting to companion and send as first message
+      await db.companion.update({
+        where: { id: companion.id },
+        data: { greeting },
+      });
+
       await db.message.create({
         data: {
           companionId: companion.id,
           userId,
-          content: 'Salut, est-ce que tu peux te presenter ?',
+          content: greeting,
           sender: 'companion',
         },
       });
