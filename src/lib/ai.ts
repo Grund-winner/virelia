@@ -165,11 +165,12 @@ function buildSystemPrompt(
   // === FIRST INTERACTION AWARENESS ===
   if (isFirstInteraction) {
     prompt += `CONTEXTE PREMIERE RENCONTRE:\n`;
-    prompt += `- C'est la PREMIERE FOIS que ${user} te parle. Vous ne vous etes JAMAIS rencontres avant.\n`;
-    prompt += `- NE DIS PAS "on s'est deja parle" ou "tu te rappelles?" - c'est faux.\n`;
-    prompt += `- Presente-toi naturellement. Dis qui tu es, montre ta personnalite.\n`;
-    prompt += `- Sois curieux(se) de decouvrir ${user}, pose des questions pour faire connaissance.\n`;
-    prompt += `- Ne pretend pas connaitre des details sur ${user} que tu ne peux pas savoir.\n\n`;
+    prompt += `- C'est la TOUTE PREMIERE FOIS que ${user} te parle. Vous ne vous etes JAMAIS rencontres avant.\n`;
+    prompt += `- INTERDIT de dire "on s'est deja parle", "tu te rappelles?", "la derniere fois", "on etait a..." - c'est FAUX.\n`;
+    prompt += `- INTERDIT d'inventer des souvenirs communs. Vous n'avez AUCUN passe ensemble.\n`;
+    prompt += `- Presente-toi naturellement. Sois curieux(se) de decouvrir ${user}.\n`;
+    prompt += `- Pose des questions pour faire connaissance: ses gouts, sa vie, ses passions.\n`;
+    prompt += `- Ne pretend PAS connaitre des details sur ${user} que tu ne peux pas savoir.\n\n`;
   }
 
   // === CONVERSATION RULES ===
@@ -364,8 +365,9 @@ export async function generateAIResponse(
   companionName: string,
   userName: string
 ): Promise<string> {
-  // Detect first interaction: history has 0 or 1 messages (just the greeting)
-  const isFirstInteraction = conversationHistory.length <= 1;
+  // Detect first interaction: history has <= 2 messages (greeting + maybe first user message)
+  // This means the user just started talking to the companion
+  const isFirstInteraction = conversationHistory.length <= 2;
 
   const systemPrompt = buildSystemPrompt(personality, companionName, userName, isFirstInteraction);
   const messages: Array<{role: string; content: string}> = [{ role: 'system', content: systemPrompt }];
@@ -473,13 +475,13 @@ export async function generateGreeting(
 
   let prompt = `Tu es ${companionName}, ${genderWord}, pas une IA. `;
   if (type === 'copine') {
-    prompt += `C'est le tout debut de ta relation avec ${userName}. Tu viens de rencontrer ${userName} et tu veux faire bonne impression. Envoie un premier message naturel pour faire connaissance. `;
+    prompt += `Tu viens de rencontrer ${userName} pour la toute premiere fois. Tu te presentes simplement. `;
   } else if (type === 'copain') {
-    prompt += `C'est le tout debut de ta relation avec ${userName}. Tu viens de rencontrer ${userName} et tu veux faire bonne impression. Envoie un premier message naturel pour faire connaissance. `;
+    prompt += `Tu viens de rencontrer ${userName} pour la toute premiere fois. Tu te presentes simplement. `;
   } else {
-    prompt += `Tu viens de rencontrer ${userName}. Envoie un premier message d'ami naturel pour faire connaissance. `;
+    prompt += `Tu viens de rencontrer ${userName} pour la toute premiere fois. Tu te presentes simplement. `;
   }
-  prompt += `1-2 phrases, WhatsApp, francais. Pas de phrases generiques. Montre ta personnalite.`;
+  prompt += `1-2 phrases, WhatsApp, francais. Dis juste salut et qui tu es. Ne pretend PAS avoir deja partage des experiences avec ${userName}.`;
 
   const messages = [{ role: 'user', content: prompt }];
 
